@@ -1,0 +1,193 @@
+{
+  "name": "Unread Email Summariser",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "bbc70954-5a3a-4001-bc28-49f7aa2f9b09",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "filters": {
+          "readStatus": "unread"
+        }
+      },
+      "id": "0bc7494f-b25e-460e-ade4-34399fe2c207",
+      "name": "Get 5 Unread Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        -112
+      ],
+      "webhookId": "be24ff20-3269-4c73-8682-2771b7bc3716",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "P967nzmDIkE7tIiR",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write ONE line (20 words maximum) describing this email. No greeting, no heading, no extra text.\\n\\nFrom: {{ $json.from }}\\nSubject: {{ $json.subject }}\\nPreview: {{ $json.snippet }}",
+        "options": {}
+      },
+      "id": "8b564b3d-2d18-47c1-8286-53924619270d",
+      "name": "Summarise Each Email",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aaacdbd3-76ac-4cce-9b75-ac312dbe2ec6",
+      "name": "Combine Summaries",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        544,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "shamsgdesigner@gmail.com",
+        "subject": "Your 5 unread emails",
+        "message": "={{ '<div style=\"font-family:Arial,sans-serif;max-width:600px;color:#222\"><h2 style=\"color:#2457a7\">Your Unread Email Summary</h2><p>Here are your latest unread emails:</p><ol style=\"padding-left:22px\">' + $json.output.map(s => '<li style=\"padding:8px 0;line-height:1.5\">' + String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,' ') + '</li>').join('') + '</ol><p style=\"color:#777;font-size:12px\">Generated automatically by your n8n AI workflow.</p></div>' }}",
+        "options": {}
+      },
+      "id": "79db1c61-bd61-41ea-b913-621ec29d7fd5",
+      "name": "Email Summaries to Me",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        752,
+        -112
+      ],
+      "webhookId": "4303a8d2-4452-4fa8-ac93-a18646566f8b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "P967nzmDIkE7tIiR",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "cacca721-ed43-4dda-a2ed-b25da4719ef8",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        112
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "vKjLWjRxHuJtmdfw",
+          "name": "OpenAI account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get 5 Unread Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get 5 Unread Emails": {
+      "main": [
+        [
+          {
+            "node": "Summarise Each Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarise Each Email": {
+      "main": [
+        [
+          {
+            "node": "Combine Summaries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Summaries": {
+      "main": [
+        [
+          {
+            "node": "Email Summaries to Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarise Each Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d5ebf595-da6f-4f9c-97bc-7fc967a41006",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b20310fc6c44fa8f8cca17d88a1574d769ebc00246774e949be77201f9979016"
+  },
+  "nodeGroups": [],
+  "id": "InVY2AUyOGA7WsKW",
+  "tags": []
+}
